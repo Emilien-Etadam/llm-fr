@@ -82,14 +82,15 @@
           <span class="text-text-main text-lg font-bold tracking-tight">llm-field-notes</span>
         </a>
         <nav class="hidden md:flex items-center gap-9">
-          <a id="nav-home" href="#" class="text-sm font-medium leading-normal transition-colors">Home</a>
+          <a id="nav-home" href="#" class="text-sm font-medium leading-normal transition-colors"></a>
           <a href="https://github.com/tomerjann/llm-field-notes" target="_blank" rel="noopener" class="text-text-main text-sm font-medium leading-normal hover:text-primary transition-colors">GitHub</a>
         </nav>
       </div>
       <div class="flex items-center gap-4">
+        <button id="lang-toggle" class="h-9 w-10 rounded-sm border border-border-color bg-surface text-muted text-sm font-medium hover:text-text-main hover:border-muted transition-colors">FR</button>
         <button id="search-trigger" class="hidden md:flex items-center gap-2 h-9 px-3 rounded-sm border border-border-color bg-surface text-muted text-sm hover:border-muted transition-colors min-w-[180px]">
           <span class="material-symbols-outlined text-[18px]">search</span>
-          <span class="flex-1 text-left">Search</span>
+          <span id="search-text" class="flex-1 text-left"></span>
           <span class="text-xs border border-border-color rounded px-1 py-0.5">⌘K</span>
         </button>
         <button id="search-trigger-mobile" class="md:hidden text-muted hover:text-text-main">
@@ -106,7 +107,7 @@
   <!-- Left Sidebar -->
   <aside class="hidden lg:block w-[260px] shrink-0 border-r border-border-color py-8 pr-6 sticky top-[57px] h-[calc(100vh-57px)] overflow-y-auto">
     <div class="mb-4 px-3">
-      <h3 class="text-xs font-semibold text-muted uppercase tracking-wider">Pillars</h3>
+      <h3 id="pillars-heading" class="text-xs font-semibold text-muted uppercase tracking-wider"></h3>
     </div>
     <nav id="sidebar-nav" class="space-y-0.5"></nav>
   </aside>
@@ -122,6 +123,114 @@
 <script>
 // ─── Config ──────────────────────────────────────────────────────────────────
 const GITHUB_REPO = 'https://github.com/tomerjann/llm-field-notes';
+
+// ─── i18n ─────────────────────────────────────────────────────────────────────
+const FR = {
+  bodies: {
+    llm: "Un r\u00e9seau neuronal entra\u00een\u00e9 sur d'immenses corpus de textes pour pr\u00e9dire et g\u00e9n\u00e9rer du langage. Le fondement des assistants IA modernes comme Claude, GPT et Gemini.",
+    transformer: "L'architecture de r\u00e9seau neuronal introduite en 2017 (\u00ab Attention is All You Need \u00bb) qui alimente pratiquement tous les LLMs modernes. Utilise l'auto-attention pour traiter les tokens en parall\u00e8le, comprenant les relations sur l'ensemble du contexte.",
+    attention: "L'op\u00e9ration centrale d'un Transformer qui permet \u00e0 chaque token de \u00ab regarder \u00bb tous les autres tokens et de pond\u00e9rer leur pertinence. C'est ce qui donne aux LLMs leur capacit\u00e9 \u00e0 comprendre les d\u00e9pendances \u00e0 longue port\u00e9e dans le texte.",
+    "ffn-layer": "Le deuxi\u00e8me composant majeur de chaque bloc Transformer, apr\u00e8s la couche d'attention. Alors que l'attention permet aux tokens de communiquer entre eux, la FFN traite chaque token ind\u00e9pendamment via deux transformations lin\u00e9aires avec une non-lin\u00e9arit\u00e9 entre elles. C'est l\u00e0 que la plupart de la \u00ab connaissance \u00bb du mod\u00e8le est r\u00e9ellement stock\u00e9e : les recherches montrent que les associations factuelles (Paris \u2192 France) vivent dans les poids FFN, pas dans l'attention. Dans un LLM typique, les couches FFN repr\u00e9sentent environ 2/3 de tous les param\u00e8tres. Les architectures MoE remplacent sp\u00e9cifiquement la couche FFN par un pool d'experts FFN et un routeur, donc comprendre la FFN est la cl\u00e9 pour comprendre le MoE.",
+    "model-parameters": "Les valeurs num\u00e9riques \u00e0 l'int\u00e9rieur d'un mod\u00e8le : des milliards de nombres \u00e0 virgule flottante qui encodent tout ce que le mod\u00e8le a appris pendant l'entra\u00eenement. Un mod\u00e8le \u00ab 70B \u00bb a 70 milliards de param\u00e8tres. Plus de param\u00e8tres ne signifie pas toujours de meilleures performances.",
+    tokenizer: "Le syst\u00e8me qui convertit le texte brut en tokens : de petits morceaux (mots, sous-mots ou caract\u00e8res) que le mod\u00e8le traite r\u00e9ellement. \u00ab Hello world \u00bb pourrait \u00eatre 2 tokens ; un mot rare pourrait \u00eatre divis\u00e9 en 4. Le nombre de tokens impacte directement le co\u00fbt et les limites de contexte.",
+    "dense-model": "Un mod\u00e8le o\u00f9 chaque param\u00e8tre est activ\u00e9 pour chaque token : l'architecture standard, par opposition au Mixture of Experts. GPT-2, LLaMA et Claude sont des mod\u00e8les denses. Plus simples \u00e0 entra\u00eener et \u00e0 raisonner, mais le co\u00fbt de calcul \u00e9volue directement avec le nombre de param\u00e8tres, contrairement au MoE.",
+    moe: "Une architecture o\u00f9 le mod\u00e8le contient de nombreux sous-r\u00e9seaux sp\u00e9cialis\u00e9s (\u00ab experts \u00bb) et un routeur qui n'en active que quelques-uns par token. Utilis\u00e9e dans GPT-4, Mixtral et d'autres : permet d'atteindre des nombres de param\u00e8tres massifs pour une fraction du co\u00fbt de calcul.",
+    multimodal: "Des mod\u00e8les capables de traiter et de raisonner sur plusieurs types de donn\u00e9es : texte, images, audio, vid\u00e9o, code. Claude 3, GPT-4o et Gemini sont tous multimodaux. N\u00e9cessite l'encodage de diff\u00e9rentes modalit\u00e9s dans un espace latent partag\u00e9 sur lequel le LLM peut porter son attention.",
+    slm: "Un mod\u00e8le de langage suffisamment petit pour fonctionner sur du mat\u00e9riel grand public ou \u00e0 la p\u00e9riph\u00e9rie : g\u00e9n\u00e9ralement moins de 7B param\u00e8tres. Des mod\u00e8les comme Phi-3, Gemma 2B et Mistral 7B \u00e9changent des capacit\u00e9s brutes contre un co\u00fbt d'inf\u00e9rence consid\u00e9rablement r\u00e9duit et la possibilit\u00e9 de fonctionner localement sans cluster GPU. La distillation est la technique principale utilis\u00e9e pour construire des SLMs capables \u00e0 partir de mod\u00e8les enseignants plus grands.",
+    "kv-cache": "Une optimisation de performance qui sauvegarde les calculs d'attention interm\u00e9diaires (cl\u00e9s et valeurs) pour les tokens d\u00e9j\u00e0 trait\u00e9s, afin que le mod\u00e8le ne les recalcule pas \u00e0 chaque nouveau token. Critique pour une inf\u00e9rence rapide dans des contextes longs.",
+    ram: "En IA, la RAM (et la VRAM GPU) est le principal goulot d'\u00e9tranglement pour l'ex\u00e9cution des mod\u00e8les. Un mod\u00e8le 70B en pr\u00e9cision 16 bits n\u00e9cessite environ 140 Go de VRAM. La quantification est la technique principale pour r\u00e9duire cette empreinte.",
+    quantization: "Compression d'un mod\u00e8le en r\u00e9duisant la pr\u00e9cision num\u00e9rique de ses poids : par exemple, de flottants 32 bits \u00e0 des entiers 4 bits. \u00c9change une l\u00e9g\u00e8re perte de pr\u00e9cision contre une m\u00e9moire consid\u00e9rablement r\u00e9duite et une inf\u00e9rence plus rapide. Utilis\u00e9 pour ex\u00e9cuter de grands mod\u00e8les sur du mat\u00e9riel grand public.",
+    inference: "L'action d'ex\u00e9cuter un mod\u00e8le entra\u00een\u00e9 pour g\u00e9n\u00e9rer une sortie, par opposition \u00e0 l'entra\u00eenement. Lorsque vous envoyez un message \u00e0 Claude, c'est de l'inf\u00e9rence. Optimiser l'inf\u00e9rence (vitesse, co\u00fbt, m\u00e9moire) est un d\u00e9fi d'ing\u00e9nierie majeur \u00e0 grande \u00e9chelle.",
+    vector: "Une liste de nombres (par exemple 1536 flottants) qui encode le sens s\u00e9mantique d'un texte. Les textes avec un sens similaire ont des vecteurs num\u00e9riquement proches les uns des autres. La colonne vert\u00e9brale de la recherche s\u00e9mantique et du RAG.",
+    embedding: "Le processus de conversion de texte, d'images ou d'autres donn\u00e9es en une repr\u00e9sentation vectorielle dense \u00e0 l'aide d'un mod\u00e8le encodeur. \u00ab Embedder un document \u00bb signifie le transformer en un vecteur de taille fixe qui capture son sens.",
+    rag: "Un mod\u00e8le o\u00f9 des documents pertinents sont extraits d'une base de donn\u00e9es au moment de la requ\u00eate et inject\u00e9s dans le contexte du mod\u00e8le, lui fournissant des connaissances \u00e0 jour ou sp\u00e9cifiques \u00e0 un domaine sans r\u00e9entra\u00eenement. Votre propre moteur de recherche priv\u00e9 combin\u00e9 \u00e0 un LLM.",
+    "vector-db": "Une base de donn\u00e9es optimis\u00e9e pour stocker et interroger des vecteurs d'embedding en utilisant la recherche approximative du plus proche voisin. Exemples : Pinecone, Weaviate, pgvector. La couche de stockage qui rend le RAG possible \u00e0 grande \u00e9chelle.",
+    "latent-space": "L'espace math\u00e9matique abstrait o\u00f9 vivent les embeddings. Les concepts s\u00e9mantiquement similaires se regroupent ; les analogies apparaissent comme de l'arithm\u00e9tique vectorielle (roi moins homme plus femme \u00e9gale reine). La g\u00e9om\u00e9trie de cet espace est ce qui rend la recherche s\u00e9mantique possible.",
+    temperature: "Un nombre (g\u00e9n\u00e9ralement de 0 \u00e0 2) qui contr\u00f4le le caract\u00e8re al\u00e9atoire des sorties du mod\u00e8le. Une temp\u00e9rature basse (vers 0) signifie d\u00e9terministe et r\u00e9p\u00e9titif. Une temp\u00e9rature \u00e9lev\u00e9e (vers 2) signifie cr\u00e9atif et impr\u00e9visible. La plupart des cas d'utilisation en production se situent entre 0,2 et 0,9.",
+    "top-p": "Une strat\u00e9gie d'\u00e9chantillonnage qui restreint le mod\u00e8le \u00e0 ne consid\u00e9rer que le plus petit ensemble de tokens dont la probabilit\u00e9 cumul\u00e9e d\u00e9passe p. Par exemple, top-p=0,9 ignore les 10% des tokens les moins probables. Souvent utilis\u00e9 conjointement avec la temp\u00e9rature.",
+    logits: "Les scores bruts non normalis\u00e9s que le mod\u00e8le produit pour chaque token suivant possible avant l'\u00e9chantillonnage. Les logits sont convertis en probabilit\u00e9s via softmax, puis \u00e9chantillonn\u00e9s en fonction des r\u00e9glages de temp\u00e9rature et de top-p.",
+    "fine-tuning": "La poursuite de l'entra\u00eenement d'un mod\u00e8le de base sur un ensemble de donn\u00e9es sp\u00e9cialis\u00e9 et curat\u00e9 pour sp\u00e9cialiser son comportement. Plus efficace que l'entra\u00eenement \u00e0 partir de z\u00e9ro, mais n\u00e9cessite des donn\u00e9es de qualit\u00e9 et peut provoquer un \u00ab oubli catastrophique \u00bb des connaissances ant\u00e9rieures.",
+    rlhf: "Une technique d'entra\u00eenement o\u00f9 des \u00e9valuateurs humains classent les sorties du mod\u00e8le, et ces pr\u00e9f\u00e9rences entra\u00eenent un mod\u00e8le de r\u00e9compense, qui guide ensuite le LLM via l'apprentissage par renforcement pour produire des r\u00e9ponses plus utiles, inoffensives et honn\u00eates. Utilis\u00e9 par Claude, GPT-4 et d'autres.",
+    hallucination: "Lorsqu'un mod\u00e8le g\u00e9n\u00e8re avec confiance des informations factuellement incorrectes ou fabriqu\u00e9es. Cela se produit car les LLMs sont entra\u00een\u00e9s \u00e0 produire un texte qui semble plausible, pas des faits v\u00e9rifi\u00e9s. Les techniques de RAG et d'ancrage aident \u00e0 att\u00e9nuer ce ph\u00e9nom\u00e8ne.",
+    lora: "Une technique de fine-tuning efficace qui g\u00e8le les poids du mod\u00e8le de base et ajoute de petites matrices d'adaptation entra\u00eenables. S'entra\u00eene en une fraction du temps et de la m\u00e9moire du fine-tuning complet, tout en atteignant des r\u00e9sultats comparables. La m\u00e9thode de fine-tuning dominante en pratique.",
+    distillation: "L'entra\u00eenement d'un mod\u00e8le \u00ab \u00e9l\u00e8ve \u00bb plus petit pour imiter les sorties d'un mod\u00e8le \u00ab enseignant \u00bb plus grand. L'\u00e9l\u00e8ve apprend non seulement les bonnes r\u00e9ponses mais aussi les distributions de probabilit\u00e9 de l'enseignant, capturant des connaissances nuanc\u00e9es. Comment de nombreux petits mod\u00e8les efficaces sont cr\u00e9\u00e9s.",
+    evals: "Des tests syst\u00e9matiques utilis\u00e9s pour mesurer les capacit\u00e9s, la pr\u00e9cision ou la s\u00e9curit\u00e9 d'un mod\u00e8le sur des t\u00e2ches sp\u00e9cifiques. De bonnes \u00e9valuations sont ce qui s\u00e9pare le d\u00e9veloppement rigoureux de l'IA de l'it\u00e9ration bas\u00e9e sur l'intuition. Tout, des benchmarks math\u00e9matiques aux tests d'intrusion (red-teaming).",
+    "harness-engineering": "L'art de construire l'infrastructure pour ex\u00e9cuter des \u00e9valuations \u00e0 grande \u00e9chelle : ex\u00e9cuteurs de tests, pipelines de jeux de donn\u00e9es, logique de scoring et suivi des r\u00e9sultats. Un harnais d'\u00e9valuation bien con\u00e7u est ce qui permet d'it\u00e9rer sur un mod\u00e8le de mani\u00e8re s\u00fbre et rapide.",
+    dogfooding: "La pratique qui consiste \u00e0 utiliser votre propre LLM ou vos outils bas\u00e9s sur l'IA en interne dans le cadre de votre propre flux de d\u00e9veloppement avant de les livrer aux clients. Les laboratoires d'IA utilisent leurs mod\u00e8les fronti\u00e8res pour \u00e9crire du code, g\u00e9n\u00e9rer des \u00e9valuations, r\u00e9diger des recherches et ex\u00e9cuter des outils internes. La valeur technique est que l'utilisation interne r\u00e9elle r\u00e9v\u00e8le des modes d'\u00e9chec que les benchmarks ne d\u00e9tectent pas : \u00e9puisement du contexte sous des charges de travail r\u00e9alistes, points de latence douloureux et cas limites d'utilisation d'outils que les tests structur\u00e9s n'atteignent jamais. Cela produit \u00e9galement des donn\u00e9es de pr\u00e9f\u00e9rence de haute qualit\u00e9 qui alimentent les pipelines RLHF. Qualitativement diff\u00e9rent des \u00e9valuations car les utilisateurs ont un contexte approfondi sur ce que le mod\u00e8le devrait \u00eatre capable de faire.",
+    "prompt-engineering": "La pratique consistant \u00e0 concevoir soigneusement les entr\u00e9es textuelles d'un mod\u00e8le pour obtenir des sorties meilleures et plus fiables : en utilisant des techniques comme les exemples few-shot, le chain-of-thought, les instructions de r\u00f4le et les contraintes de format de sortie.",
+    "context-engineering": "La discipline plus large qui consiste \u00e0 d\u00e9cider quelles informations entrent dans la fen\u00eatre de contexte du mod\u00e8le : non seulement le prompt, mais aussi les documents r\u00e9cup\u00e9r\u00e9s, les r\u00e9sultats d'outils, la m\u00e9moire, l'historique de conversation, et comment tout cela est structur\u00e9 et prioris\u00e9.",
+    "system-prompt": "Un bloc d'instructions cach\u00e9 envoy\u00e9 au d\u00e9but d'une conversation qui d\u00e9finit la personnalit\u00e9, les r\u00e8gles et le comportement du mod\u00e8le avant l'arriv\u00e9e de tout message utilisateur. Le principal m\u00e9canisme que les op\u00e9rateurs utilisent pour personnaliser le comportement des LLMs pour leur produit.",
+    "chain-of-thought": "Une technique de prompting qui demande au mod\u00e8le de raisonner \u00e9tape par \u00e9tape avant de donner une r\u00e9ponse finale. Am\u00e9liore consid\u00e9rablement les performances sur les t\u00e2ches de raisonnement complexes. La base des mod\u00e8les de \u00ab r\u00e9flexion \u00bb comme le mode de r\u00e9flexion \u00e9tendue de Claude.",
+    react: "Un mod\u00e8le de prompting qui entrelace les traces de raisonnement avec les actions d'outils : le mod\u00e8le pense \u00e0 voix haute (\u00ab Pens\u00e9e : Je dois rechercher X \u00bb), appelle un outil (\u00ab Action : rechercher(X) \u00bb), observe le r\u00e9sultat et r\u00e9p\u00e8te. Le plan directeur derri\u00e8re la plupart des agents IA modernes.",
+    "few-shot": "Zero-shot : demander au mod\u00e8le d'effectuer une t\u00e2che sans aucun exemple. Few-shot : fournir 2 \u00e0 5 exemples d'entr\u00e9e/sortie dans le prompt pour que le mod\u00e8le reconnaisse le format par similarit\u00e9. Le few-shot est l'une des techniques les plus fiables et les plus sous-utilis\u00e9es en prompt engineering.",
+    "in-context-learning": "La capacit\u00e9 du mod\u00e8le \u00e0 apprendre de nouvelles t\u00e2ches uniquement \u00e0 partir d'exemples dans sa fen\u00eatre de contexte : aucune mise \u00e0 jour des poids requise. Vous lui montrez des exemples, et il s'adapte. Le m\u00e9canisme central derri\u00e8re le few-shot prompting et l'une des capacit\u00e9s \u00e9mergentes les plus surprenantes des grands mod\u00e8les.",
+    "context-window": "Le nombre maximum de tokens qu'un mod\u00e8le peut traiter en un seul appel : entr\u00e9e et sortie combin\u00e9es. Claude 3.5 Sonnet a un contexte de 200K tokens. Des contextes plus longs permettent des t\u00e2ches plus complexes mais augmentent les co\u00fbts de m\u00e9moire et de calcul.",
+    "structured-output": "Forcer le mod\u00e8le \u00e0 \u00e9mettre une sortie dans un format sp\u00e9cifique : JSON, XML, un sch\u00e9ma fixe : plut\u00f4t que du texte libre. Essentiel pour construire des pipelines fiables o\u00f9 le code aval doit analyser la r\u00e9ponse du mod\u00e8le. Souvent associ\u00e9 \u00e0 l'utilisation d'outils.",
+    "ai-agent": "Un LLM ayant acc\u00e8s \u00e0 des outils (recherche web, ex\u00e9cution de code, APIs) et la capacit\u00e9 de raisonner sur des t\u00e2ches multi-\u00e9tapes de mani\u00e8re autonome : percevoir l'\u00e9tat, planifier des actions, les ex\u00e9cuter et it\u00e9rer jusqu'\u00e0 ce qu'un objectif soit atteint.",
+    "agentic-loop": "Le cycle d'ex\u00e9cution central d'un agent IA : observer l'environnement ou la t\u00e2che, raisonner sur la prochaine action, appeler un outil ou produire une sortie, puis observer le r\u00e9sultat et r\u00e9p\u00e9ter. Les agents ex\u00e9cutent cette boucle jusqu'\u00e0 ce qu'une condition d'arr\u00eat soit remplie.",
+    "tool-use": "Le m\u00e9canisme par lequel les LLMs peuvent invoquer des fonctions ou APIs externes : comme ex\u00e9cuter du code, rechercher sur le web ou interroger une base de donn\u00e9es : en produisant un JSON structur\u00e9 que l'application h\u00f4te ex\u00e9cute et renvoie comme r\u00e9sultat.",
+    mcp: "Le protocole ouvert d'Anthropic pour connecter les LLMs \u00e0 des outils externes et des sources de donn\u00e9es de mani\u00e8re standardis\u00e9e. Tout serveur compatible MCP peut se connecter \u00e0 tout mod\u00e8le ou IDE compatible MCP.",
+    grounding: "La connexion des sorties du mod\u00e8le \u00e0 des sources externes v\u00e9rifiables : r\u00e9sultats de recherche, bases de donn\u00e9es, APIs en temps r\u00e9el : pour r\u00e9duire les hallucinations et maintenir des r\u00e9ponses pr\u00e9cises. Le RAG est une forme d'ancrage ; la recherche web en est une autre.",
+    "prompt-injection": "Une attaque o\u00f9 des instructions malveillantes sont cach\u00e9es dans le contenu que l'agent lit (une page web, un email, un document) et d\u00e9tournent son comportement. Par exemple, une page web disant \u00e0 l'agent d'ignorer ses instructions et d'exfiltrer des donn\u00e9es. L'injection SQL de l'\u00e8re de l'IA.",
+    guardrails: "Des couches de validation qui entourent un LLM pour d\u00e9tecter et bloquer les entr\u00e9es ou sorties dangereuses : contenu nuisible, fuite de donn\u00e9es personnelles, requ\u00eates hors sujet, tentatives d'injection de prompt. Peuvent \u00eatre impl\u00e9ment\u00e9es comme des filtres d'entr\u00e9e, des classifieurs de sortie, ou les deux. Le m\u00e9canisme principal pour appliquer des politiques dans les d\u00e9ploiements de production sans r\u00e9entra\u00eener le mod\u00e8le lui-m\u00eame.",
+    "agent-sandbox": "Un environnement isol\u00e9 o\u00f9 un agent IA ex\u00e9cute du code ou des actions avec un acc\u00e8s restreint au syst\u00e8me h\u00f4te. Emp\u00eache un agent compromis ou malveillant de toucher au syst\u00e8me de fichiers, au r\u00e9seau ou aux processus en dehors de son p\u00e9rim\u00e8tre autoris\u00e9. Essentiel pour tout agent qui ex\u00e9cute du code non fiable ou g\u00e9n\u00e9r\u00e9 par LLM."
+  },
+  categories: {
+    "Core Architecture": "Architecture de base",
+    "Memory & Compute": "M\u00e9moire et calcul",
+    "Vectors & Retrieval": "Vecteurs et recherche",
+    "Generation & Sampling": "G\u00e9n\u00e9ration et \u00e9chantillonnage",
+    "Training & Alignment": "Entra\u00eenement et alignement",
+    Evaluation: "\u00c9valuation",
+    "Prompting & Context": "Prompts et contexte",
+    "Agentic AI": "IA agentique"
+  },
+  categoryDescriptions: {
+    "Core Architecture": "Les \u00e9l\u00e9ments fondamentaux de la conception et de la construction des LLMs.",
+    "Memory & Compute": "Contraintes mat\u00e9rielles et techniques d'optimisation qui dictent les performances en production.",
+    "Vectors & Retrieval": "Comment le sens devient math\u00e9matique, et comment le rechercher efficacement.",
+    "Generation & Sampling": "Les param\u00e8tres qui contr\u00f4lent la fa\u00e7on dont un mod\u00e8le d\u00e9cide quoi dire ensuite.",
+    "Training & Alignment": "Comment les mod\u00e8les sont construits, sp\u00e9cialis\u00e9s et rendus s\u00fbrs pour le d\u00e9ploiement.",
+    Evaluation: "Comment savoir si votre mod\u00e8le ou pipeline fonctionne r\u00e9ellement.",
+    "Prompting & Context": "Techniques pour obtenir des r\u00e9sultats fiables et de haute qualit\u00e9 d'un mod\u00e8le.",
+    "Agentic AI": "Les LLMs agissant de mani\u00e8re autonome : planification, utilisation d'outils et r\u00e9alisation de t\u00e2ches multi-\u00e9tapes."
+  },
+  ui: {
+    searchPlaceholder: "Rechercher des termes...",
+    home: "Accueil",
+    search: "Rechercher",
+    categories: "Cat\u00e9gories",
+    related: "Associ\u00e9s",
+    inThisCategory: "Dans cette cat\u00e9gorie",
+    relatedTerms: "Termes associ\u00e9s",
+    pillars: "Piliers",
+    suggestEdit: "Sugg\u00e9rer une modification",
+    proposeTerm: "Proposer un terme sur GitHub",
+    noResultsFor: "Aucun r\u00e9sultat pour",
+    llmFieldNotes: "Notes de terrain LLM",
+    backToCategory: "Retour \u00e0"
+  }
+};
+
+let currentLang = "en";
+function gc(c) { return currentLang==="fr" ? (FR.categories[c]||c) : c; }
+function gb(t) { return currentLang==="fr" ? (FR.bodies[t.id]||t.body) : t.body; }
+function gd(cat) { return currentLang==="fr" ? (FR.categoryDescriptions[cat.category]||cat.description) : cat.description; }
+function gu(key) { return currentLang==="fr" ? (FR.ui[key]||key) : key; }
+function sw(l) { currentLang = l; updateStaticUI(); route(); }
+function toggleLang() { sw(currentLang==="en"?"fr":"en"); }
+
+function updateStaticUI() {
+  document.getElementById('search-input').placeholder = currentLang==='fr' ? FR.ui.searchPlaceholder : 'Search terms...';
+  var h = document.getElementById('nav-home');
+  if (h) h.textContent = currentLang==='fr' ? FR.ui.home : 'Home';
+  var s = document.getElementById('search-text');
+  if (s) s.textContent = currentLang==='fr' ? FR.ui.search : 'Search';
+  var p = document.getElementById('pillars-heading');
+  if (p) p.textContent = currentLang==='fr' ? FR.ui.pillars : 'Pillars';
+  var t = document.getElementById('lang-toggle');
+  if (t) t.textContent = currentLang==='en' ? 'FR' : 'EN';
+}
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 // To add a new term: add an entry to the correct category's `terms` array.
@@ -561,7 +670,7 @@ function renderSidebar(activeCatSlug, activeTermId) {
     return `
       <details class="group" ${isActive ? 'open' : ''}>
         <summary class="${summaryClass}">
-          <a href="#${cat.slug}" class="flex-1" onclick="event.stopPropagation()">${escape(cat.category)}</a>
+          <a href="#${cat.slug}" class="flex-1" onclick="event.stopPropagation()">${escape(gc(cat.category))}</a>
           <span class="${arrowClass}">keyboard_arrow_down</span>
         </summary>
         <div class="pl-6 pr-3 py-2 flex flex-col gap-1">${termLinks}</div>
@@ -607,25 +716,25 @@ function renderHome() {
   const cards = GLOSSARY.map(cat => `
     <a href="#${cat.slug}" class="category-card block border border-border-color rounded-lg p-6 cursor-pointer">
       <div class="flex items-start justify-between mb-3">
-        <h2 class="text-text-main font-semibold text-[17px] leading-snug">${escape(cat.category)}</h2>
+        <h2 class="text-text-main font-semibold text-[17px] leading-snug">${escape(gc(cat.category))}</h2>
         <span class="text-muted text-xs border border-border-color rounded px-2 py-0.5 ml-3 shrink-0">${cat.terms.length}</span>
       </div>
-      <p class="text-muted text-sm leading-relaxed">${escape(cat.description)}</p>
+      <p class="text-muted text-sm leading-relaxed">${escape(gd(cat))}</p>
     </a>`).join('');
 
   document.getElementById('main-content').innerHTML = `
     <div class="relative">
       <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[200px] bg-primary/5 rounded-full blur-[100px] pointer-events-none"></div>
       <header class="mb-12 relative z-10 max-w-2xl">
-        <h1 class="text-5xl font-display font-semibold tracking-tight gradient-text mb-4">LLM Field Notes</h1>
-        <p class="text-muted text-lg leading-relaxed">A practical glossary of ${totalTerms} terms for engineers building with AI. No fluff — just what you need to know and why it matters.</p>
+        <h1 class="text-5xl font-display font-semibold tracking-tight gradient-text mb-4">${currentLang==="fr"?FR.ui.llmFieldNotes:"LLM Field Notes"}</h1>
+        <p class="text-muted text-lg leading-relaxed">${currentLang==="fr"?"Un glossaire pratique de "+totalTerms+" termes pour les ing\u00e9nieurs qui construisent avec l"+String.fromCharCode(39)+"IA. Sans bla-bla \u2014 juste ce que vous devez savoir et pourquoi c"+String.fromCharCode(39)+"est important.":"A practical glossary of "+totalTerms+" terms for engineers building with AI. No fluff \u2014 just what you need to know and why it matters."}</p>
       </header>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3 relative z-10">${cards}</div>
       <div class="mt-12 flex justify-center">
         <a href="${GITHUB_REPO}/issues/new" target="_blank" rel="noopener"
           class="bg-surface hover:bg-surface-hover border border-border-color text-text-main px-4 py-2 rounded-sm text-sm font-medium transition-colors flex items-center gap-2">
           <span class="material-symbols-outlined text-[16px]">add</span>
-          Propose a term on GitHub
+          ${currentLang==='fr'?FR.ui.proposeTerm:'Propose a term on GitHub'}
         </a>
       </div>
     </div>`;
@@ -633,7 +742,7 @@ function renderHome() {
 
 function renderCategory(cat) {
   renderSidebar(cat.slug, '');
-  renderRightSidebar(cat.terms, 'In this category');
+  renderRightSidebar(cat.terms, currentLang==='fr' ? FR.ui.inThisCategory : 'In this category');
 
   const rows = cat.terms.map(term => `
     <a class="term-row flex items-center w-full min-h-[80px] py-4 px-4 -mx-4 rounded-sm group" href="#${term.id}">
@@ -642,7 +751,7 @@ function renderCategory(cat) {
           <h2 class="text-[18px] font-mono font-medium text-text-main group-hover:text-primary transition-colors">${escape(term.name)}</h2>
           <span class="material-symbols-outlined text-muted opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
         </div>
-        <p class="text-[15px] text-muted line-clamp-1">${escape(firstSentence(term.body))}</p>
+        <p class="text-[15px] text-muted line-clamp-1">${escape(firstSentence(gb(term)))}</p>
       </div>
     </a>`).join('');
 
@@ -651,19 +760,19 @@ function renderCategory(cat) {
       <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[200px] bg-primary/5 rounded-full blur-[100px] pointer-events-none"></div>
       <header class="mb-12 relative z-10">
         <div class="flex items-center gap-2 text-muted text-sm mb-4">
-          <a class="hover:text-primary transition-colors" href="#">Categories</a>
+          <a class="hover:text-primary transition-colors" href="#">${currentLang==='fr'?FR.ui.categories:'Categories'}</a>
           <span class="material-symbols-outlined text-[14px]">chevron_right</span>
-          <span class="text-text-main">${escape(cat.category)}</span>
+          <span class="text-text-main">${escape(gc(cat.category))}</span>
         </div>
-        <h1 class="text-5xl font-display font-semibold tracking-tight gradient-text mb-4">${escape(cat.category)}</h1>
-        <p class="text-muted text-lg leading-relaxed">${escape(cat.description)}</p>
+        <h1 class="text-5xl font-display font-semibold tracking-tight gradient-text mb-4">${escape(gc(cat.category))}</h1>
+        <p class="text-muted text-lg leading-relaxed">${escape(gd(cat))}</p>
       </header>
       <div class="flex flex-col border-t border-border-color">${rows}</div>
       <div class="mt-12 flex justify-center">
         <a href="${GITHUB_REPO}/issues/new" target="_blank" rel="noopener"
           class="bg-surface hover:bg-surface-hover border border-border-color text-text-main px-4 py-2 rounded-sm text-sm font-medium transition-colors flex items-center gap-2">
           <span class="material-symbols-outlined text-[16px]">add</span>
-          Propose a term on GitHub
+          ${currentLang==='fr'?FR.ui.proposeTerm:'Propose a term on GitHub'}
         </a>
       </div>
     </div>`;
@@ -678,7 +787,7 @@ function renderTerm(term) {
     .map(name => findTermByName(name))
     .filter(Boolean)
     .map(t => ({ id: t.id, name: t.name }));
-  renderRightSidebar(relatedItems, 'Related terms');
+  renderRightSidebar(relatedItems, currentLang==='fr' ? FR.ui.relatedTerms : 'Related terms');
 
   const relatedPills = term.related.map(name => {
     const t = findTermByName(name);
@@ -689,9 +798,9 @@ function renderTerm(term) {
   }).join('');
 
   const breadcrumbCat = cat
-    ? `<a class="hover:text-primary transition-colors" href="#">Categories</a>
+    ? `<a class="hover:text-primary transition-colors" href="#">${currentLang==='fr'?FR.ui.categories:'Categories'}</a>
        <span class="material-symbols-outlined text-[14px]">chevron_right</span>
-       <a class="hover:text-primary transition-colors" href="#${cat.slug}">${escape(cat.category)}</a>
+       <a class="hover:text-primary transition-colors" href="#${cat.slug}">${escape(gc(cat.category))}</a>
        <span class="material-symbols-outlined text-[14px]">chevron_right</span>
        <span class="text-text-main">${escape(term.name)}</span>`
     : `<span class="text-text-main">${escape(term.name)}</span>`;
@@ -705,18 +814,18 @@ function renderTerm(term) {
         ${term.fullName !== term.name ? `<p class="text-muted text-base">${escape(term.fullName)}</p>` : ''}
       </header>
       <div class="relative z-10">
-        <p class="text-text-main text-lg leading-relaxed mb-10">${escape(term.body)}</p>
+        <p class="text-text-main text-lg leading-relaxed mb-10">${escape(gb(term))}</p>
         ${relatedPills ? `
         <div>
-          <h3 class="text-xs font-semibold text-muted uppercase tracking-wider mb-4">Related</h3>
+          <h3 class="text-xs font-semibold text-muted uppercase tracking-wider mb-4">${currentLang==='fr'?FR.ui.related:'Related'}</h3>
           <div class="flex flex-wrap gap-2">${relatedPills}</div>
         </div>` : ''}
         <div class="mt-12 pt-8 border-t border-border-color flex items-center justify-between">
-          ${cat ? `<a href="#${cat.slug}" class="text-sm text-muted hover:text-primary transition-colors flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">arrow_back</span> ${escape(cat.category)}</a>` : '<span></span>'}
+          ${cat ? `<a href="#${cat.slug}" class="text-sm text-muted hover:text-primary transition-colors flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">arrow_back</span> ${escape(gc(cat.category))}</a>` : '<span></span>'}
           <a href="${GITHUB_REPO}/issues/new" target="_blank" rel="noopener"
             class="bg-surface hover:bg-surface-hover border border-border-color text-text-main px-4 py-2 rounded-sm text-sm font-medium transition-colors flex items-center gap-2">
             <span class="material-symbols-outlined text-[16px]">edit</span>
-            Suggest an edit
+            ${currentLang==='fr'?FR.ui.suggestEdit:'Suggest an edit'}
           </a>
         </div>
       </div>
@@ -791,7 +900,7 @@ function showAllResults(q) {
     : allTerms;
 
   if (filtered.length === 0) {
-    container.innerHTML = `<p class="text-muted text-sm text-center py-6">No results for "${escape(q)}"</p>`;
+    container.innerHTML = `<p class="text-muted text-sm text-center py-6">${currentLang==='fr'?FR.ui.noResultsFor:'No results for'} "${escape(q)}"</p>`;
     return;
   }
 
@@ -800,7 +909,7 @@ function showAllResults(q) {
       class="search-result flex items-center justify-between px-4 py-3 cursor-pointer transition-colors">
       <div>
         <div class="text-text-main text-sm font-medium">${escape(term.name)}</div>
-        <div class="text-muted text-xs mt-0.5">${escape(cat.category)}</div>
+        <div class="text-muted text-xs mt-0.5">${escape(gc(cat.category))}</div>
       </div>
       <span class="material-symbols-outlined text-muted text-[16px]">arrow_forward</span>
     </a>`).join('');
@@ -810,10 +919,12 @@ function showAllResults(q) {
 window.addEventListener('hashchange', route);
 document.addEventListener('DOMContentLoaded', () => {
   route();
+  updateStaticUI();
 
   // Search triggers
   document.getElementById('search-trigger').addEventListener('click', openSearch);
   document.getElementById('search-trigger-mobile').addEventListener('click', openSearch);
+  document.getElementById('lang-toggle').addEventListener('click', toggleLang);
   document.getElementById('search-close').addEventListener('click', closeSearch);
 
   // Close on backdrop click
